@@ -16,7 +16,8 @@ export const ShopCard = ({title,author,price}) => {
                     <Card.Text>
                         {author}
                     </Card.Text>
-                    <Button variant="primary">Добавить в корзину</Button>
+                    {/* <Button variant="primary">Добавить в корзину</Button> */}
+                    {/* <Button variant="primary" onClick={deleteBook}>Добавить в корзину</Button> */}
                 </Card.Body>
                 <Card.Footer>
                     {price} грн.

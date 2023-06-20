@@ -14,13 +14,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 import avatar from "./img/avatar.png"
+import  Book  from "./Components/Pages/Book";
 
 export default function Header() {
     const [show, setShow] = React.useState(false);
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
+    const [isButtonClicked, setIsButtonClicked] = useState(false);
     const [books, setBooks] = useState([]);
+    const [comments, setComms] = useState([]);
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -31,6 +34,8 @@ export default function Header() {
     const [emailError, setEmailError] = useState('Email не може бути порожнім')
     const [passwordError, setPasswordError] = useState('Пароль не може бути порожнім')
     const [formValid, setFormValid] = useState(false)
+    let bookId = 0;
+    let userId = 1;
 
     const nameHandler = (e) => {
         setName(e.target.value)
@@ -83,30 +88,76 @@ export default function Header() {
         } else {
             setFormValid(true)
         }
-    }, [nameError,emailError, passwordError])
+    }, [nameError, emailError, passwordError])
 
     useEffect(() => {
         fetch("http://localhost:8080/books/all")
             .then(res => res.json())
             .then((result) => {
                 setBooks(result);
+                console.log(result);
             }
             )
     }, [])
 
     const handleClick = (e) => {
         e.preventDefault()
-        const user = { name,email, password }
+        const user = { name, email, password }
         fetch("http://localhost:8080/users/create", {
             method: "POST",
-            headers:{"Content-Type":"application/json"},
-            body: JSON.stringify( user)
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user)
         })
             .then((response) => {
                 console.log("New Student added");
-                console.log(user);
-                console.log(response);
             })
+
+        setIsButtonClicked(true);
+    }
+
+    const getBook = (id) => {
+        bookId = id;
+        fetch("http://localhost:8080/books/" + bookId)
+            .then(res => res.json())
+            .then((result) => {
+                setBooks(result);
+                console.log(result);
+            }
+            )
+    }
+
+
+    const getNewBook = () => {
+        fetch("http://localhost:8080/books/all/new")
+            .then(res => res.json())
+            .then((result) => {
+                setBooks(result);
+                console.log(result)
+            }
+            )
+    }
+
+    const getComms = () => {
+        fetch("http://localhost:8080/comments/all")
+            .then(res => res.json())
+            .then((result) => {
+                setComms(result);
+            }
+            )
+        return comments;
+    }
+
+    const addComms = (value) => {
+        const comm = [value, userId, bookId, 0, 0];
+        fetch("http://localhost:8080/comments/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(comm)
+        })
+    }
+
+    const setUser = () => {
+
     }
 
     return (
@@ -131,14 +182,12 @@ export default function Header() {
                             <Nav.Link href="/blog"> Blog </Nav.Link>
                         </Nav>
 
-                        <Form className="d-flex justify-content-md-end">
-                            <FormControl
-                                type="text"
-                                placeholder="Search"
-                                className="me-sm-1"
-                            />
-                            <Button variant="outline-info">Search</Button>
-                            <Button className="ms-2" onClick={handleShow}>Login</Button>
+                        <Form className="d-flex justify-content-md-end" >
+                            {isButtonClicked ? (
+                                <Navbar.Text>{name}</Navbar.Text>
+                            ) : (
+                                <Button className="ms-2" onClick={handleShow}>SignIn</Button>
+                            )}
                         </Form>
                     </Navbar.Collapse>
                 </Container>
@@ -146,12 +195,12 @@ export default function Header() {
 
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Log in</Modal.Title>
+                    <Modal.Title>Register</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
 
-                    <Form.Group controlId="fromBasicName">
+                        <Form.Group controlId="fromBasicName">
                             <Form.Label>Nickname</Form.Label>
                             {(nameError && nameDirty) && <div style={{ color: "red" }}>{nameError}</div>}
                             <Form.Control onChange={e => nameHandler(e)} name="name"
@@ -176,13 +225,13 @@ export default function Header() {
                                 value={password} onBlur={e => blurHandler(e)} type="password" placeholder="Enter password">
                             </Form.Control>
                         </Form.Group>
-                        
+
 
                         <Form.Group controlId="fromBasicCheckbox">
                             <Form.Check type="checkbox" label="Remember me" />
                         </Form.Group>
 
-                        <Button disabled={!formValid} onClick={handleClick} variant="primary" type="submit">
+                        <Button disabled={!formValid}  variant="primary" type="submit">
                             Submit
                         </Button>
                     </Form>
@@ -194,6 +243,15 @@ export default function Header() {
                 <Routes>
                     <Route path="/" element={<Home
                         books={books}
+                        getBook={getBook}
+                        getNewBook={getNewBook}
+                        
+                    />} />
+                    <Route path={"/books/:id"} element={<Book
+                        books={books}
+                        getComms={getComms}
+                        addComms={addComms}
+                        index={bookId}
                     />} />
                     {/* <Route path="/about" element={<About/>}/>
                 <Route path="/contacts" element={<Contacts/>}/>
